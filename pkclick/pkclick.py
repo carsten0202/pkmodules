@@ -84,7 +84,7 @@ class SampleList(gzFile):
 			except ImportError:
 				self.fail("Encountered VCF imput but could not find the PyVCF module. Either install with 'pip install PyVCF' or provide different input.")
 		elif self._isTable(f):
-			import pkcsv as csv
+			import pklib.pkcsv as csv
 			(riter, hdr) = csv.reader(f)
 			logging.info(f"SampleList: Treating samples file as Table/CSV. Reading from column '{hdr[0]}'.")
 			samples = [row[0] for row in riter]
