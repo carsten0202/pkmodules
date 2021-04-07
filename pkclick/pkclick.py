@@ -43,11 +43,14 @@ class gzFile(click.File):
 	@staticmethod
 	def _getziptype(f, magic_dict):
 		"""If f is seekable, return the zip flavor."""
+		logging.debug(f"gzFile: Input is seekable = {f.seekable()}.")
 		if f.seekable():
-			file_start = f.read(max(len(x) for x in magic_dict))
+			file_sample = f.read(max(len(x) for x in magic_dict))
+			logging.debug(f"gzFile: Sniffer sample = '{file_sample}'.")
 			f.seek(0)
 			for magic, filetype in magic_dict.items():
-				if file_start.startswith(magic):
+				if file_sample.startswith(magic):
+					logging.info(f"gzFile: File type determined = {filetype}.")
 					return filetype
 		return None
 
@@ -62,7 +65,9 @@ class CSV(click.ParamType):
 	def convert(self, value, param, ctx):
 		import csv
 		value = super().convert(value, param, ctx)
-		return next(csv.reader([value]))
+		out = next(csv.reader([value]))
+		logging.debug(f"CSV Convert: Read list = {out}.")
+		return out
 
 
 
@@ -73,7 +78,7 @@ class SampleList(gzFile):
 	"""Obtain a list of samples from a file (or '-'... maybe?)."""
 	def convert(self, value, param, ctx):
 		f = super().convert(value, param, ctx)
-		logging.debug(f"SampleList: Input is seekable: {f.seekable()}.")
+		logging.debug(f"SampleList: Input is seekable = {f.seekable()}.")
 		if self._isVCF(f):
 			logging.info("SampleList: Treating samples file as VCF.")
 			try:
@@ -100,9 +105,10 @@ class SampleList(gzFile):
 	def _isVCF(f):
 		"""Is f a VCF file? Returns 'None' if it couldn't check f."""
 		if f.seekable():
-			file_start = f.readline()
+			file_sample = f.readline()
+			logging.debug(f"SampleList: Sniffer sample = '{file_sample}'.")
 			f.seek(0)
-			return file_start.startswith("##fileformat=VCFv4")
+			return file_sample.startswith("##fileformat=VCFv4")
 		return None
 
 	@staticmethod
@@ -110,9 +116,12 @@ class SampleList(gzFile):
 		"""Is f a tsv/csv file? Returns 'None' if it couldn't check f."""
 		if f.seekable():
 			import csv
-			file_start = f.readline()
+			file_sample = f.read(1024)
+			logging.debug(f"SampleList: Sniffer sample = '{file_sample}'.")
 			f.seek(0)
-			dialect = csv.Sniffer().sniff(file_start)
-			return len(next(csv.reader([file_start], dialect))) > 1
+			try: dialect = csv.Sniffer().sniff(file_sample)
+			except csv.Error:
+				return False
+			return len(next(csv.reader([file_sample], dialect))) > 1
 		return None
 
