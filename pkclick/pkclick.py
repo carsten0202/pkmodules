@@ -6,7 +6,7 @@
 import click
 import logging
 
-
+logger = logging.getLogger(__name__)
 
 
 # TODO: Here's some fun. All click type extenders must obey thede five guys:
@@ -43,14 +43,14 @@ class gzFile(click.File):
 	@staticmethod
 	def _getziptype(f, magic_dict):
 		"""If f is seekable, return the zip flavor."""
-		logging.debug(f"gzFile: Input is seekable = {f.seekable()}.")
+		logger.debug(f"gzFile: Input is seekable = {f.seekable()}.")
 		if f.seekable():
 			file_sample = f.read(max(len(x) for x in magic_dict))
-			logging.debug(f"gzFile: Sniffer sample = '{file_sample}'.")
+			logger.debug(f"gzFile: Sniffer sample = '{file_sample}'.")
 			f.seek(0)
 			for magic, filetype in magic_dict.items():
 				if file_sample.startswith(magic):
-					logging.info(f"gzFile: File type determined = {filetype}.")
+					logger.info(f"gzFile: File type determined = {filetype}.")
 					return filetype
 		return None
 
@@ -66,7 +66,7 @@ class CSV(click.ParamType):
 		import csv
 		value = super().convert(value, param, ctx)
 		out = next(csv.reader([value]))
-		logging.debug(f"CSV Convert: Read list = {out}.")
+		logger.debug(f"CSV Convert: Read list = {out}.")
 		return out
 
 
@@ -78,9 +78,9 @@ class SampleList(gzFile):
 	"""Obtain a list of samples from a file (or '-'... maybe?)."""
 	def convert(self, value, param, ctx):
 		f = super().convert(value, param, ctx)
-		logging.debug(f"SampleList: Input is seekable = {f.seekable()}.")
+		logger.debug(f"SampleList: Input is seekable = {f.seekable()}.")
 		if self._isVCF(f):
-			logging.info("SampleList: Treating samples file as VCF.")
+			logger.info("SampleList: Treating samples file as VCF.")
 			try:
 				import vcf
 				vcf_r = vcf.Reader(f, compressed=False)
@@ -91,13 +91,13 @@ class SampleList(gzFile):
 		elif self._isTable(f):
 			import pklib.pkcsv as csv
 			(riter, hdr) = csv.reader(f)
-			logging.info(f"SampleList: Treating samples file as Table/CSV. Reading from column '{hdr[0]}'.")
+			logger.info(f"SampleList: Treating samples file as Table/CSV. Reading from column '{hdr[0]}'.")
 			samples = [row[0] for row in riter]
 		else:
-			logging.info("SampleList: Treating samples file as list of plain IDs.")
+			logger.info("SampleList: Treating samples file as list of plain IDs.")
 			samples = [line.rstrip() for line in f.readlines()]
-		logging.debug(f"SampleList: samples[:5]={samples[:5]}.")
-		logging.info(f"SampleList: Read {len(samples)} sample identifiers.")
+		logger.debug(f"SampleList: samples[:5]={samples[:5]}.")
+		logger.info(f"SampleList: Read {len(samples)} sample identifiers.")
 		return samples
 #		self.fail("Could not parse input. Please try a different file format.")
 
@@ -106,7 +106,7 @@ class SampleList(gzFile):
 		"""Is f a VCF file? Returns 'None' if it couldn't check f."""
 		if f.seekable():
 			file_sample = f.readline()
-			logging.debug(f"SampleList: Sniffer sample = '{file_sample}'.")
+			logger.debug(f"SampleList: Sniffer sample = '{file_sample}'.")
 			f.seek(0)
 			return file_sample.startswith("##fileformat=VCFv4")
 		return None
@@ -117,7 +117,7 @@ class SampleList(gzFile):
 		if f.seekable():
 			import csv
 			file_sample = f.read(1024)
-			logging.debug(f"SampleList: Sniffer sample = '{file_sample}'.")
+			logger.debug(f"SampleList: Sniffer sample = '{file_sample}'.")
 			f.seek(0)
 			try: dialect = csv.Sniffer().sniff(file_sample)
 			except csv.Error:
