@@ -9,7 +9,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-# TODO: Here's some fun. All click type extenders must obey thede five guys:
+# TODO: Here's some fun. All click type extenders must obey these five guys:
 #    it needs a name
 #    it needs to pass through None unchanged
 #    it needs to convert from a string
@@ -116,12 +116,13 @@ class SampleList(gzFile):
 		"""Is f a tsv/csv file? Returns 'None' if it couldn't check f."""
 		if f.seekable():
 			import csv
+			file_line = f.readline()
 			file_sample = f.read(1024)
 			logger.debug(f"SampleList: Sniffer sample = '{file_sample}'.")
 			f.seek(0)
 			try: dialect = csv.Sniffer().sniff(file_sample)
 			except csv.Error:
 				return False
-			return len(next(csv.reader([file_sample], dialect))) > 1
+			return len(next(csv.reader([file_line], dialect))) > 1
 		return None
 
