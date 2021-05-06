@@ -3,6 +3,8 @@
 # --%% plclick.py  %%--
 #
  
+ __version__ = 1.0
+
 import click
 import logging
 
@@ -90,7 +92,8 @@ class SampleList(gzFile):
 				self.fail("Encountered VCF imput but could not find the PyVCF module. Either install with 'pip install PyVCF' or provide different input.")
 		elif self._isTable(f):
 			import pklib.pkcsv as csv
-			(riter, hdr) = csv.reader(f)
+			riter = csv.reader(f)
+			hdr = next(riter)
 			logger.info(f"SampleList: Treating samples file as Table/CSV. Reading from column '{hdr[0]}'.")
 			samples = [row[0] for row in riter]
 		else:

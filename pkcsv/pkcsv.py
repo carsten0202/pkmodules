@@ -3,7 +3,7 @@
 # --%%  pkcsv.py  %%--
 #
 
-__version__ = 1.0
+__version__ = 1.0.1
 
 import csv
 import itertools
@@ -14,9 +14,8 @@ logger = logging.getLogger(__name__)
 def reader(f, dialect=None, **fmtparams):
 	"""Autodetects input with sniffer and returns tuple with iter and header."""
 	(header, fout, dialect) = _configure(f)
-	next(fout)
-	riter = csv.reader(f, dialect=dialect, **fmtparams)
-	return riter, header
+	riter = csv.reader(fout, dialect=dialect, **fmtparams)
+	return riter
 
 def DictReader(f, fieldnames=None, dialect=None, *args, **kwds):
 	"""Autodetects input with sniffer and returns dict with header as keys."""
@@ -40,5 +39,4 @@ def _configure(f):
 		logger.info(f"R table format detected in input.")
 		header = ["row.index"] + header
 	return header, f2, dialect
-
 
