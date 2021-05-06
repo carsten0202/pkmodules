@@ -3,7 +3,7 @@
 # --%% plclick.py  %%--
 #
  
-__version__ = "1.0"
+__version__ = "1.0.1"
 
 import click
 import logging
@@ -93,9 +93,9 @@ class SampleList(gzFile):
 		elif self._isTable(f):
 			import pklib.pkcsv as csv
 			riter = csv.reader(f)
-			hdr = next(riter)
-			logger.info(f"SampleList: Treating samples file as Table/CSV. Reading from column '{hdr[0]}'.")
-			samples = [row[0] for row in riter]
+			hdr = next(riter)[0]
+			logger.debug(f"SampleList: Treating samples file as Table/CSV. Reading from column '{hdr}'.")
+			samples = [hdr] + [row[0] for row in riter]
 		else:
 			logger.info("SampleList: Treating samples file as list of plain IDs.")
 			samples = [line.rstrip() for line in f.readlines()]
@@ -121,7 +121,7 @@ class SampleList(gzFile):
 			import csv
 			file_line = f.readline()
 			file_sample = f.read(1024)
-			logger.debug(f"SampleList: Sniffer sample = '{file_sample}'.")
+			logger.debug(f"SampleList: First line looks like this: '{file_line}'.")
 			f.seek(0)
 			try: dialect = csv.Sniffer().sniff(file_sample)
 			except csv.Error:
