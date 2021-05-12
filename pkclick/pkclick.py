@@ -3,7 +3,7 @@
 # --%% plclick.py  %%--
 #
  
-__version__ = "1.0.1"
+__version__ = "1.1.0"
 
 import click
 import logging
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 #    it needs to convert from a string
 #    it needs to convert its result type through unchanged (eg: needs to be idempotent)
 #    it needs to be able to deal with param and context being None. This can be the case when the object is used with prompt inputs.
-
+#    it needs to call self.fail() if conversion fails
 
 #
 # -%  Class pkclick.gzFile  %-
@@ -74,7 +74,7 @@ class CSV(click.ParamType):
 
 
 #
-# -%  CLASS: Samples  %-
+# -%  CLASS: SampleList  %-
 
 class SampleList(gzFile):
 	"""Obtain a list of samples from a file (or '-'... maybe?)."""
@@ -99,7 +99,7 @@ class SampleList(gzFile):
 		else:
 			logger.info("SampleList: Treating samples file as list of plain IDs.")
 			samples = [line.rstrip() for line in f.readlines()]
-		logger.debug(f"SampleList: samples[:5]={samples[:5]}.")
+		logger.debug(f"SampleList: samples[:10]={samples[:10]}.")
 		logger.info(f"SampleList: Read {len(samples)} sample identifiers.")
 		return samples
 #		self.fail("Could not parse input. Please try a different file format.")
@@ -128,4 +128,32 @@ class SampleList(gzFile):
 				return False
 			return len(next(csv.reader([file_line], dialect))) > 1
 		return None
+
+
+
+#
+# -%  CLASS: TimeDelta %-
+
+class Timedelta(click.ParamType):
+	"""Class for recording time intervals and the like as pd.Timedelta."""
+	name = "time_str"
+	def convert(self, value, param, ctx):
+		value = super().convert(value, param, ctx)
+		try: (n, u) = value.split()
+		except AttributeError:
+			return None
+		except ValueError:
+			(n, u) = ("1", value)
+		if u.lower() in ("week", "weeks"):
+			(n, u) = (str(float(n) * 7), "days")
+		elif u.lower() in ("month", "months"):
+			(n, u) = (str(float(n) * 30.44), "days")
+		elif u.lower() in ("year", "years"):
+			(n, u) = (str(float(n) * 365.2425), "days")
+		import pandas as pd
+		return n + " " + u
+
+#    it needs to convert its result type through unchanged (eg: needs to be idempotent)
+#    it needs to call self.fail() if conversion fails
+
 
