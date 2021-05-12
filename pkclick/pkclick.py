@@ -141,17 +141,19 @@ class Timedelta(click.ParamType):
 		value = super().convert(value, param, ctx)
 		try: (n, u) = value.split()
 		except AttributeError:
-			return None
+			return value # This will return if value is not a string making function idempotent
 		except ValueError:
 			(n, u) = ("1", value)
 		if u.lower() in ("week", "weeks"):
-			(n, u) = (str(float(n) * 7), "days")
+			(n, u) = (float(n) * 7, "days")
 		elif u.lower() in ("month", "months"):
-			(n, u) = (str(float(n) * 30.44), "days")
+			(n, u) = (float(n) * 30.44, "days")
 		elif u.lower() in ("year", "years"):
-			(n, u) = (str(float(n) * 365.2425), "days")
+			(n, u) = (float(n) * 365.2425, "days")
 		import pandas as pd
-		return n + " " + u
+		try: return pd.Timedelta(str(n) + " " + u)
+		except ValueError:
+			self.fail()
 
 #    it needs to convert its result type through unchanged (eg: needs to be idempotent)
 #    it needs to call self.fail() if conversion fails
