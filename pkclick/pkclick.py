@@ -3,7 +3,7 @@
 # --%% plclick.py  %%--
 #
  
-__version__ = "1.1.0"
+__version__ = "1.1.1"
 
 import click
 import logging
@@ -153,7 +153,7 @@ class Timedelta(click.ParamType):
 		import pandas as pd
 		try: return pd.Timedelta(str(n) + " " + u)
 		except ValueError:
-			self.fail()
+			self.fail(f"{value} could not be converted to a delta time value.")
 
 #    it needs to convert its result type through unchanged (eg: needs to be idempotent)
 #    it needs to call self.fail() if conversion fails
