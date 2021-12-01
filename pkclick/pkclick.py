@@ -42,7 +42,7 @@ class gzFile(click.File):
 		import gzip
 		import io
 		f = super().convert(value, param, ctx)
-		logger.debug(f.name)
+		logger.info(f.name)
 		try:
 			if self._getziptype(f, self.magic_dict) is not None:
 				return io.TextIOWrapper(gzip.GzipFile(fileobj=f), errors='UnicodeError')
