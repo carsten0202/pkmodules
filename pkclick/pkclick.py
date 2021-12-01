@@ -9,13 +9,6 @@ import click
 import codecs
 import logging
 
-def droid_handler(exception): 
-    print("These are not the bytes you're looking for.")
-    return (u"[bad char]", exception.end)
-codecs.register_error("droid", droid_handler)
-
-# print codecs.encode(u"abc\u03c0de", "ascii", "droid")
-
 logger = logging.getLogger(__name__)
 
 
@@ -29,6 +22,12 @@ logger = logging.getLogger(__name__)
 
 #
 # -%  Class pkclick.gzFile  %-
+
+def unicodeerror_handler(exception): 
+	logger.warning("These are not the bytes you're looking for.")
+	return (u"[bad char]", exception.end)
+codecs.register_error("UnicodeError", unicodeerror_handler)
+
 
 class gzFile(click.File):
 	"""A Class for detecting compressed files and automagically decrompress them."""
@@ -45,10 +44,10 @@ class gzFile(click.File):
 		f = super().convert(value, param, ctx)
 		try:
 			if self._getziptype(f, self.magic_dict) is not None:
-				return io.TextIOWrapper(gzip.GzipFile(fileobj=f), errors='droid')
+				return io.TextIOWrapper(gzip.GzipFile(fileobj=f), errors='UnicodeError')
 		except UnicodeDecodeError:
 			self.fail("Could not interpret input. Did you remember to use binary mode? eg gzFile(mode='rb')")
-		return io.TextIOWrapper(f)
+		return io.TextIOWrapper(f, errors='UnicodeError')
 
 	@staticmethod
 	def _getziptype(f, magic_dict):
