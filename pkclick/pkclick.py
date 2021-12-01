@@ -10,7 +10,7 @@ import codecs
 import logging
 
 def droid_handler(exception): 
-    print "These are not the bytes you're looking for."
+    print("These are not the bytes you're looking for.")
     return (u"[bad char]", exception.end)
 codecs.register_error("droid", droid_handler)
 
