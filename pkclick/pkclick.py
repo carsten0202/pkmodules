@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 # -%  Class pkclick.gzFile  %-
 
 def unicodeerror_handler(exc): 
-	logger.warning(f"'{exc.encoding}' codec can't decode byte {exc.object[exc.start:exc.end]} found in input. Byte will be replaced with '?'.")
+	logger.warning(f"Current codec '{exc.encoding}' can't decode byte {exc.object[exc.start:exc.end]} found in input. Byte will be replaced with '?'.")
 	logger.info(exc.object[0:exc.start] + "?" + exc.object[exc.end:])
 #	return (f"{exc.object[0:exc.start]}?{exc.object[exc.end:]}", exc.end)
 	return (u"[bad char]", exc.end)
@@ -48,7 +48,7 @@ class gzFile(click.File):
 			logger.info(f"Reading from '{f.name}'")
 		try:
 			if self._getziptype(f, self.magic_dict) is not None:
-				return io.TextIOWrapper(gzip.GzipFile(fileobj=f), errors='UnicodeError')
+				return io.TextIOWrapper(gzip.GzipFile(fileobj=f), errors='replace')
 		except UnicodeDecodeError:
 			self.fail("Could not interpret input. Did you remember to use binary mode? eg gzFile(mode='rb')")
 		return io.TextIOWrapper(f, errors='UnicodeError')
