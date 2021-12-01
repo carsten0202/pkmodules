@@ -45,7 +45,7 @@ class gzFile(click.File):
 		f = super().convert(value, param, ctx)
 		try:
 			if self._getziptype(f, self.magic_dict) is not None:
-				return io.TextIOWrapper(gzip.GzipFile(fileobj=f)i, error='droid')
+				return io.TextIOWrapper(gzip.GzipFile(fileobj=f), error='droid')
 		except UnicodeDecodeError:
 			self.fail("Could not interpret input. Did you remember to use binary mode? eg gzFile(mode='rb')")
 		return io.TextIOWrapper(f)
