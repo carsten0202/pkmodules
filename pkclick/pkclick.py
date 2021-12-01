@@ -3,10 +3,18 @@
 # --%% plclick.py  %%--
 #
  
-__version__ = "1.1.1"
+__version__ = "1.1.2"
 
 import click
+import codecs
 import logging
+
+def droid_handler(exception): 
+    print "These are not the bytes you're looking for."
+    return (u"[bad char]", exception.end)
+codecs.register_error("droid", droid_handler)
+
+# print codecs.encode(u"abc\u03c0de", "ascii", "droid")
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +45,7 @@ class gzFile(click.File):
 		f = super().convert(value, param, ctx)
 		try:
 			if self._getziptype(f, self.magic_dict) is not None:
-				return io.TextIOWrapper(gzip.GzipFile(fileobj=f))
+				return io.TextIOWrapper(gzip.GzipFile(fileobj=f)i, error='droid')
 		except UnicodeDecodeError:
 			self.fail("Could not interpret input. Did you remember to use binary mode? eg gzFile(mode='rb')")
 		return io.TextIOWrapper(f)
@@ -153,7 +161,7 @@ class Timedelta(click.ParamType):
 		import pandas as pd
 		try: return pd.Timedelta(str(n) + " " + u)
 		except ValueError:
-			self.fail(f"{value} could not be converted to a delta time value.")
+			self.fail(f"'{value}' could not be converted to a delta time value.")
 
 #    it needs to convert its result type through unchanged (eg: needs to be idempotent)
 #    it needs to call self.fail() if conversion fails
