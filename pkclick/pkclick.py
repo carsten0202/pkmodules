@@ -25,9 +25,7 @@ logger = logging.getLogger(__name__)
 
 def unicodeerror_handler(exc): 
 	logger.warning(f"Current codec '{exc.encoding}' can't decode byte {exc.object[exc.start:exc.end]} found in input. Byte will be replaced with '?'.")
-	logger.info(exc.object[0:exc.start] + b"?" + exc.object[exc.end:])
 	return (exc.object[0:exc.start] + b"?" + exc.object[exc.end+1:], exc.end)
-#	return (u"[bad char]", exc.end)
 codecs.register_error("UnicodeError", unicodeerror_handler)
 
 
