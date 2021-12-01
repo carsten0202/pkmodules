@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 # -%  Class pkclick.gzFile  %-
 
 def unicodeerror_handler(exception): 
-	logger.warning("These are not the bytes you're looking for.")
+	logger.warning(f" '{exception.object}' can't be decoded with encoding '{exception.encoding}'. Data entry will be skipped.")
 	return (u"[bad char]", exception.end)
 codecs.register_error("UnicodeError", unicodeerror_handler)
 
@@ -42,6 +42,7 @@ class gzFile(click.File):
 		import gzip
 		import io
 		f = super().convert(value, param, ctx)
+		logger.debug(f.__slots__)
 		try:
 			if self._getziptype(f, self.magic_dict) is not None:
 				return io.TextIOWrapper(gzip.GzipFile(fileobj=f), errors='UnicodeError')
