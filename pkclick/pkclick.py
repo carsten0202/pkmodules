@@ -42,7 +42,7 @@ class gzFile(click.File):
 		import gzip
 		import io
 		f = super().convert(value, param, ctx)
-		if hasattr(f, 'name')
+		if hasattr(f, 'name'):
 			logger.info(f"Reading from '{f.name}'")
 		try:
 			if self._getziptype(f, self.magic_dict) is not None:
