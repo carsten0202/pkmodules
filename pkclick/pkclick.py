@@ -24,8 +24,10 @@ logger = logging.getLogger(__name__)
 # -%  Class pkclick.gzFile  %-
 
 def unicodeerror_handler(exc): 
-	logger.warning(f"Character '{exc.object[exc.start:exc.end]}' in input not valid with encoding '{exc.encoding}'. Data entry will be skipped.")
-	return (u"[bad char]", exc.end)
+	logger.warning(f"Character {exc.object[exc.start:exc.end]} in input not valid with encoding '{exc.encoding}'. Data entry will be skipped.")
+	logger.info(exc.object[0:exc.start])
+	return exc.object[0:exc.start]
+#	return (u"[bad char]", exc.end)
 codecs.register_error("UnicodeError", unicodeerror_handler)
 
 
