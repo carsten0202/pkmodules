@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 def unicodeerror_handler(exc): 
 	logger.warning(f"Character {exc.object[exc.start:exc.end]} in input not valid with encoding '{exc.encoding}'. Data entry will be skipped.")
 	logger.info(exc.object[0:exc.start] + exc.object[exc.end:])
-	return f'{exc.object[0:exc.start]}{exc.object[exc.end:]}'
+	return (f'{exc.object[0:exc.start]}{exc.object[exc.end:]}', exc.end)
 #	return (u"[bad char]", exc.end)
 codecs.register_error("UnicodeError", unicodeerror_handler)
 
