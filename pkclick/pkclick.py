@@ -6,7 +6,7 @@
 import click
 import logging
 
-
+Version "1.2"
 
 
 # TODO: Here's some fun. All click type extenders must obey thede five guys:
@@ -63,6 +63,34 @@ class CSV(click.ParamType):
 		import csv
 		value = super().convert(value, param, ctx)
 		return next(csv.reader([value]))
+
+
+
+#
+# -%  CLASS: pkclick.CSVfile  %-
+
+class CSVFile(click.File):
+	"""A class for opening files and automatically push them through my csv package."""
+	def convert(self, value, param, ctx):
+		"""Convert by calling DictReader on filehandle."""
+		import pklib.pkcsv as csv
+		f = super().convert(value, param, ctx)
+		logging.info(f"CSVFile: Reading tabular data from {f.name}")
+		return csv.DictReader(f)
+
+
+
+#
+# -%  CLASS: pkclick.VCFFile  -%
+
+class VCFFile(click.File):
+	"""A class for parsing a VCF file using pysam."""
+	name = "VCFFILE"
+	def convert(self, value, param, ctx):
+		"""Convert by reading VCF with pysam VariantFile."""
+		from pysam import VariantFile
+#		f = super().convert(value, param, ctx)
+		return VariantFile(value)
 
 
 
