@@ -91,9 +91,14 @@ class CSVFile(click.File):
 	def convert(self, value, param, ctx):
 		"""Convert by calling DictReader on filehandle."""
 		import pklib.pkcsv as csv
-		f = super().convert(value, param, ctx)
-		logging.info(f"CSVFile: Reading tabular data from {f.name}")
-		return csv.DictReader(f)
+		if value is None:
+			return None
+		elif isinstance(value, csv.DictReader):
+			return value
+		else:
+			f = super().convert(value, param, ctx)
+			logging.info(f"CSVFile: Reading data table from {f.name}")
+			return csv.DictReader(f, comment_char="#")
 
 
 
@@ -106,6 +111,7 @@ class VCFFile(click.File):
 	def convert(self, value, param, ctx):
 		"""Convert by reading VCF with pysam VariantFile."""
 		from pysam import VariantFile
+		logging.info(f"VCFFile: Reading variant info from {value}")
 		return VariantFile(value)
 
 
