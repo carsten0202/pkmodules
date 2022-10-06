@@ -3,7 +3,7 @@
 # --%% plclick.py  %%--
 #
  
-__version__ = "1.1.2"
+__version__ = "1.3"
 
 import click
 import codecs
@@ -11,13 +11,12 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-
-# TODO: Here's some fun. All click type extenders must obey these five guys:
+# TODO: Here's some fun. All click type extenders must obey these guys:
 #    it needs a name
-#    it needs to pass through None unchanged
+#    it needs to pass through 'None' unchanged
 #    it needs to convert from a string
 #    it needs to convert its result type through unchanged (eg: needs to be idempotent)
-#    it needs to be able to deal with param and context being None. This can be the case when the object is used with prompt inputs.
+#    it needs to be able to deal with param and context being 'None'. This can be the case when the object is used with prompt inputs.
 #    it needs to call self.fail() if conversion fails
 
 #
@@ -27,7 +26,7 @@ def unicodeerror_handler(exc):
 	logger.warning(f"Current codec '{exc.encoding}' can't decode byte {exc.object[exc.start:exc.end]} found in input. Byte will be replaced with '?'.")
 	logger.info(f"{exc.object[0:exc.start]}?{exc.object[exc.end:]}")
 	return (f"{exc.object[0:exc.start]}?{exc.object[exc.end:]}", exc.end)
-#	return (u"[bad char]", exc.end)
+
 codecs.register_error("UnicodeError", unicodeerror_handler)
 
 
@@ -75,12 +74,57 @@ class gzFile(click.File):
 class CSV(click.ParamType):
 	"""A Class for handling option values that are comma separated values."""
 	name = "csv_list"
+
 	def convert(self, value, param, ctx):
 		import csv
 		value = super().convert(value, param, ctx)
 		out = next(csv.reader([value]))
 		logger.debug(f"CSV Convert: Read list = {out}.")
 		return out
+
+
+
+#
+# -%  CLASS: pkclick.CSVfile  %-
+
+class CSVFile(click.File):
+	"""A class for opening files and automatically push them through my csv package."""
+	def convert(self, value, param, ctx):
+		"""Convert by calling DictReader on filehandle."""
+		import pklib.pkcsv as csv
+		if value is None or isinstance(value, csv.DictReader):
+			return value
+		try:
+			f = super().convert(value, param, ctx)
+			logging.debug(f"CSVFile: Reading data table from {f.name}")
+			return csv.DictReader(f, comment_char="#")
+		except Exception as e:
+			logging.debug(e)
+			self.fail(f"ERROR: Unable to open '{value}' as a tabular text file.")
+
+
+
+#
+# -%  CLASS: pkclick.VCFFile  -%
+
+class VCFFile(click.File):
+	"""A class for parsing a VCF file using pysam."""
+	name = "VCFFILE"
+
+	def convert(self, value, param, ctx):
+		"""Convert by reading VCF with pysam VariantFile."""
+		try: from pysam import VariantFile
+		except ImportError as e:
+			logging.debug(e)
+			self.fail("ERROR: Encountered VCF imput but could not import the PySAM module for reading VCF input.i\nERROR: Please make sure PySAM isinstalled or use alternative input.")
+		if value is None or isinstance(value, VariantFile):
+			return value
+		try:
+			logging.debug(f"VCFFile: Reading variant info from {value}")
+			return VariantFile(value)
+		except Exception as e:
+			logging.debug(e)
+			self.fail(f"ERROR: Unable to open '{value}' as a VCF file.")
 
 
 
