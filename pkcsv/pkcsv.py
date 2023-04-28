@@ -13,9 +13,13 @@ logger = logging.getLogger(__name__)
 
 def reader(f, dialect=None, **fmtparams):
 	"""Autodetects input with sniffer and returns tuple with iter and header."""
-	logger.debug(f"Reading from: {f}")
-	(fout, dialect) = _configure(f, dialect=dialect)
-	riter = csv.reader(fout, dialect=dialect, **fmtparams)
+	try: logger.debug(f"Reading from: {f.name}")
+	except:	pass
+	if dialect is None:
+		(fout, dialect) = _configure(f, dialect=dialect)
+		riter = csv.reader(fout, dialect=dialect, **fmtparams)
+	else:
+		riter = csv.reader(f, dialect=dialect, **fmtparams)
 	return riter
 
 class DictReader(csv.DictReader):
@@ -28,7 +32,7 @@ class DictReader(csv.DictReader):
 		logger.debug(f"DictReader columns: {header}")
 		super().__init__(fout, fieldnames=header, dialect=dialect, *args, **kwargs)
 
-def _configure(f, dialect=None, comment_char=None):
+def _configure(f, dialect=None, comment_char=None, delimiters=None):
 	"""Check input and find header and readable iterator."""
 	(f1, f2) = itertools.tee(f,2)
 	if comment_char:
@@ -40,7 +44,7 @@ def _configure(f, dialect=None, comment_char=None):
 		line1 = next(f1)
 		line2 = next(f1)
 	logger.debug(f"Sniffer evaluating: {line1 + line2}")
-	dialect = csv.Sniffer().sniff(line1 + line2) if dialect is None else dialect
+	dialect = csv.Sniffer().sniff(line1 + line2, delimiters) if dialect is None else dialect
 	reader = csv.reader([line1, line2], dialect)
 	header = next(reader)
 	second = next(reader)
