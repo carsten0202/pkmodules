@@ -1,10 +1,11 @@
 
 #
-# --%%  pkcsv.py  %%--
+# --%%  pkcsv.py    %%--
 #
 
-__version__ = "1.2"
+__version__ = "1.3"
 # 1.2 : Changed reader into a real classed object.
+# 1.3 : Added a try statement to catch errors in DictReader if f isn't correct format.
 
 import csv
 import itertools
@@ -17,8 +18,9 @@ class reader(object):
     def __init__(self, f, dialect=None, comment_char=None, *args, **kwargs):
         """Autodetects input with sniffer and returns tuple with iter and header."""
         logger.debug(f"csv.reader reading from: {f}")
-        (fout, dialect) = _configure(f, comment_char=comment_char, dialect=dialect)
-        self._reader = csv.reader(fout, dialect=dialect, *args, **kwargs)
+        if dialect is None:
+            (f, dialect) = _configure(f, comment_char=comment_char, dialect=dialect)
+        self._reader = csv.reader(f, dialect=dialect, *args, **kwargs)
 
     def __iter__(self):
         return self
@@ -26,12 +28,14 @@ class reader(object):
     def __next__(self):
         return next(self._reader)
 
-
 class DictReader(csv.DictReader):
     """Extend DictReader from csv to add extra functionality."""
     def __init__(self, f, fieldnames=None, dialect=None, comment_char=None, *args, **kwargs):
         """Autodetects input with sniffer and returns dict with header as keys. Lines starting with comment_char will be skipped."""
-        logger.debug(f"csv.DictReader reading from: {f}")
+        try: logger.debug(f"DictReader: Reading file {f.name}")
+        except AttributeError:
+            logger.error(f"DictReader: Input doesn't look like a file object. Input={f}; type={type(f)}.")
+            exit(1)
         (fout, dialect) = _configure(f, comment_char=comment_char, dialect=dialect)
         header = next(csv.reader([next(fout)], dialect=dialect)) # Extracts header and discards it from fout)
         logger.debug(f"DictReader reading columns: {header}")
