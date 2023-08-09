@@ -44,8 +44,8 @@ class gzFile(click.File):
         import gzip
         import io
         f = super().convert(value, param, ctx)
-        if hasattr(f, 'name'):
-            logger.info(f"Reading from '{f.name}'")
+        try: logger.info(f" Reading from '{f.name}'")
+        except AttributeError: logger.info(f"Reading from'{f}'")
         try:
             if self._getziptype(f, self.magic_dict) is not None:
                 return io.TextIOWrapper(gzip.GzipFile(fileobj=f), errors='UnicodeError')
@@ -66,6 +66,21 @@ class gzFile(click.File):
                     logger.info(f"gzFile: File type determined = {filetype}.")
                     return filetype
         return None
+
+    @classmethod
+    def cast(cls, fobj):
+        """Cast most file objects into a fileobject processed by gzFile."""
+        import gzip
+        import io
+        try: logger.info(f"Reading from '{fobj.name}'")
+        except AttributeError: logger.info(f"Reading from'{fobj}'")
+        try:
+            if cls._getziptype(fobj, cls.magic_dict) is not None:
+                return io.TextIOWrapper(gzip.GzipFile(fileobj=fobj), errors='UnicodeError')
+        except UnicodeDecodeError:
+            logger.error("Could not interpret input. Did you remember to use binary mode? eg gzFile(mode='rb')")
+            exit(1)
+        return io.TextIOWrapper(fobj, errors='UnicodeError')
 
 
 

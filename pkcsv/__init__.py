@@ -3,5 +3,5 @@
 from csv import *
 
 # Then import the functions from pkcsv that we want to replace those in csv
-from .pkcsv import reader, DictReader
+from .pkcsv import reader, DictReader, sniff
 
