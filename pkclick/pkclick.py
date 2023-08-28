@@ -3,8 +3,10 @@
 # --%% plclick.py  %%--
 #
  
-__version__ = "1.4"
+__version__ = "1.6"
 # 1.4 : Added CSVList to the family
+# 1.5 : Made CSVlist indempotent. Should now obey the click law below
+# 1.6 : Looks lie I managed to add isal to the list
 
 import click
 import codecs
@@ -85,6 +87,28 @@ class gzFile(click.File):
 
 
 #
+# -%  CLASS: pkclick.isalFile
+
+class isalFile(gzFile):
+    """A Class for detecting compressed files and automagically decrompress them. Like gzFile but faster."""
+
+    def convert(self, value, param, ctx):
+        """Converts (extracts) compressed input."""
+        from isal import igzip
+        f = super(gzFile, self).convert(value, param, ctx)
+        try: logger.info(f" Reading from '{f.name}'")
+        except AttributeError: logger.info(f"Reading from'{f}'")
+        try:
+            if self._getziptype(f, self.magic_dict) is not None:
+                return io.TextIOWrapper(igzip.IGzipFile(fileobj=f), errors='UnicodeError')
+        except UnicodeDecodeError:
+            self.fail("Could not interpret input. Did you remember to use binary mode? eg gzFile(mode='rb')")
+        return io.TextIOWrapper(f, errors='UnicodeError')
+
+
+
+
+#
 # -%  CLASS: pkclick.csv  %-
 
 class CSV(click.ParamType):
@@ -93,6 +117,8 @@ class CSV(click.ParamType):
 
     def convert(self, value, param, ctx):
         import csv
+        if isinstance(value, list):
+            return value
         value = super().convert(value, param, ctx)
         out = next(csv.reader([value]))
         logger.debug(f"CSV Convert: Read list = {out}.")
