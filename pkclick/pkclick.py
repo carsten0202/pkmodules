@@ -95,6 +95,7 @@ class isalFile(gzFile):
     def convert(self, value, param, ctx):
         """Converts (extracts) compressed input."""
         from isal import igzip
+        import io
         f = super(gzFile, self).convert(value, param, ctx)
         try: logger.info(f" Reading from '{f.name}'")
         except AttributeError: logger.info(f"Reading from'{f}'")
