@@ -3,14 +3,11 @@
 # --%%  pkcsv.py    %%--
 #
 
-__version__ = "1.3"
+__version__ = "1.4"
 # 1.2 : Changed reader into a real classed object.
-<<<<<<< HEAD
 # 1.3 : Added a try statement to catch errors in DictReader if f isn't correct format.
-=======
-# 1.3 : Made _configure and the sniffer part more robust with try, except clause
+# 1.4 : Made _configure and the sniffer part more robust with try, except clause
 
->>>>>>> 23dfecf (Various bugfixes in click and csv)
 
 import csv
 import itertools
