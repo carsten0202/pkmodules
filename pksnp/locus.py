@@ -2,6 +2,9 @@
 #
 # --%%  : 'Locus' Class Definition  %%--
 
+__version__ = "1.0"
+
+
 import logging
 import re
 
@@ -33,6 +36,11 @@ class Locus(object):
         if all([self.chrom, self.pos]):
             return f"{self.chrom}:{self.pos}"
         return None
+
+    @property
+    def region(self):
+        """An array with the region, bcftools style."""
+        return [self.chrom, str(self.start)]
 
 # --%%  : 'Locus' Class Definition  %%--
 #
