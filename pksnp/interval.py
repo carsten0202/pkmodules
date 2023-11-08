@@ -1,4 +1,7 @@
 
+__version__ = "1.0"
+
+
 import itertools
 import logging
 
@@ -34,10 +37,10 @@ class Interval(Locus):
         return NotImplemented
 
     def __repr__(self):
-        return f"{self.chrom}\t{self.start}\t{self.end}"
+        return self.__str__() + "\n"
 
     def __str__(self):
-        return self.__repr__()
+         return "\t".join(self.region)
 
     @property
     def posid(self):
@@ -47,6 +50,11 @@ class Interval(Locus):
         elif all([self.chrom, self.start]):
             return f"{self.chrom}:{self.start}"
         return None
+
+    @property
+    def region(self):
+        """An array with the region, bcftools style. Hey, here's a crazy idea: Keep this as the primary, and let chrom, pos, and the others be properties???"""
+        return super().region if self.end is None else super().region + [str(self.end)]
 
     @property
     def start(self):

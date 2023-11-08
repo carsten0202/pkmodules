@@ -3,8 +3,10 @@
 # --%% plclick.py  %%--
 #
  
-__version__ = "1.4"
+__version__ = "1.5"
 # 1.4 : Added CSVList to the family
+# 1.5 : Found and fixed some big bugs like sniffer failing and SampleList not being idempotent
+
 
 import click
 import codecs
@@ -59,7 +61,7 @@ class gzFile(click.File):
         logger.debug(f"gzFile: Input is seekable = {f.seekable()}.")
         if f.seekable():
             file_sample = f.read(max(len(x) for x in magic_dict))
-            logger.debug(f"gzFile: Sniffer sample = '{file_sample}'.")
+            logger.debug(f"gzFile: Sniffer sample = '{file_sample.rstrip()}'.")
             f.seek(0)
             for magic, filetype in magic_dict.items():
                 if file_sample.startswith(magic):
@@ -98,7 +100,7 @@ class CSVIter(click.File):
             return value
         try:
             f = super().convert(value, param, ctx)
-            logging.debug(f"CSVList: Reading data table from '{f.name}'")
+            logging.debug(f"CSVIter: Reading data table from '{f.name}'")
             return csv.reader(f, comment_char="#")
         except Exception as e:
             logging.debug(e)
@@ -171,6 +173,9 @@ class VCFFile(click.File):
 class SampleList(gzFile):
     """Obtain a list of samples from a file (or '-'... maybe?)."""
     def convert(self, value, param, ctx):
+        """Expects value to be a file with single-column input (Or a VCF file with samples), and returns a list with each line from file."""
+        if value is None or isinstance(value, list):
+            return value
         f = super().convert(value, param, ctx)
         logger.debug(f"SampleList: Input is seekable = {f.seekable()}.")
         if self._isVCF(f):
@@ -201,8 +206,8 @@ class SampleList(gzFile):
         """Is f a VCF file? Returns 'None' if it couldn't check f."""
         if f.seekable():
             file_sample = f.readline()
-            logger.debug(f"SampleList: Sniffer sample = '{file_sample}'.")
             f.seek(0)
+            logger.debug(f"SampleList: isVCF = {file_sample.startswith('##fileformat=VCFv4')}")
             return file_sample.startswith("##fileformat=VCFv4")
         return None
 
@@ -213,12 +218,14 @@ class SampleList(gzFile):
             import csv
             file_line = f.readline()
             file_sample = f.read(1024)
-            logger.debug(f"SampleList: First line looks like this: '{file_line}'.")
             f.seek(0)
-            try: dialect = csv.Sniffer().sniff(file_sample)
+            try:
+                dialect = csv.Sniffer().sniff(file_sample)
+                out = len(next(csv.reader([file_line], dialect))) > 1
             except csv.Error:
-                return False
-            return len(next(csv.reader([file_line], dialect))) > 1
+                out = False
+            logger.debug(f"SampleList: isTable = {out}")
+            return out
         return None
 
 
