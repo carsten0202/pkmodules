@@ -1,6 +1,6 @@
 
 #
-# --%% plclick.py  %%--
+# --%% pkclick.py  %%--
 #
  
 __version__ = "1.5"
@@ -14,7 +14,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# TODO: Here's some fun. All click type extenders must obey these guys:
+# NOTE: Here's some fun. All click type extenders must obey these guys:
 #    it needs a name
 #    it needs to pass through 'None' unchanged
 #    it needs to convert from a string
@@ -87,26 +87,6 @@ class CSV(click.ParamType):
 
 
 
-#
-# -%  CLASS: pkclick.CSVIter  %-
-
-class CSVIter(click.File):
-    """A class for opening files with data columns and returning them as a list without headline.
-       Output: An obejct which behaves like a csv.reader"""
-    def convert(self, value, param, ctx):
-        """Convert by calling csv.reader on filehandle."""
-        import pklib.pkcsv as csv
-        if value is None or isinstance(value, csv.reader):
-            return value
-        try:
-            f = super().convert(value, param, ctx)
-            logging.debug(f"CSVIter: Reading data table from '{f.name}'")
-            return csv.reader(f, comment_char="#")
-        except Exception as e:
-            logging.debug(e)
-            self.fail(f"ERROR: Unable to open '{value}' as a column-based text file.")
-
-
 
 #
 # -%  CLASS: pkclick.CSVfile  %-
@@ -130,25 +110,11 @@ class CSVFile(click.File):
 
 
 #
-# -%  CLASS pkclick.CSVList  %-
-
-class CSVList(CSVIter):
-    """A class for opening files with data columns and returning them as a list without headline.
-       Output: Like CSVIter, but returns a list, not an iterator {e.g. like list(csv.reader())}"""
-    def convert(self, value, param, ctx):
-        """Convert the iterator from parent to a list."""
-        if value is None or isinstance(value, list):
-            return value
-        return list(super().convert(value, param, ctx))
-
-
-
-#
 # -%  CLASS: pkclick.VCFFile  -%
 
 class VCFFile(click.File):
     """A class for parsing a VCF file using pysam."""
-    name = "VCFFILE"
+    name = "VCF_FILE"
 
     def convert(self, value, param, ctx):
         """Convert by reading VCF with pysam VariantFile."""

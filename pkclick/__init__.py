@@ -5,3 +5,7 @@ from click import *
 # Then import the functions from pkclick that we want to replace those in click
 from .pkclick import *
 
+# Finally inport from loose files:
+from .CSViter import CSViter
+from .CSVlist import CSVlist
+from .BED3    import BED3
