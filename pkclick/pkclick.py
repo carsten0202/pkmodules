@@ -186,7 +186,7 @@ class SampleList(gzFile):
             file_sample = f.read(1024)
             f.seek(0)
             try:
-                dialect = csv.Sniffer().sniff(file_sample)
+                dialect = csv.Sniffer().sniff(file_sample, delimiters="     ,")
                 out = len(next(csv.reader([file_line], dialect))) > 1
             except csv.Error:
                 out = False
