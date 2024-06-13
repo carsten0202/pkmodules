@@ -4,4 +4,5 @@ from click import *
 
 # Then import the functions from pkclick that we want to replace those in click
 from .pkclick import *
-
+from .pgsfile import PGSFile
+from .vcffile import VCFFile

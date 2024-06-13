@@ -105,30 +105,6 @@ class CSVFile(click.File):
 
 
 #
-# -%  CLASS: pkclick.VCFFile  -%
-
-class VCFFile(click.File):
-	"""A class for parsing a VCF file using pysam."""
-	name = "VCFFILE"
-
-	def convert(self, value, param, ctx):
-		"""Convert by reading VCF with pysam VariantFile."""
-		try: from pysam import VariantFile
-		except ImportError as e:
-			logging.debug(e)
-			self.fail("ERROR: Encountered VCF imput but could not import the PySAM module for reading VCF input.i\nERROR: Please make sure PySAM isinstalled or use alternative input.")
-		if value is None or isinstance(value, VariantFile):
-			return value
-		try:
-			logging.debug(f"VCFFile: Reading variant info from {value}")
-			return VariantFile(value)
-		except Exception as e:
-			logging.debug(e)
-			self.fail(f"ERROR: Unable to open '{value}' as a VCF file.")
-
-
-
-#
 # -%  CLASS: SampleList  %-
 
 class SampleList(gzFile):
