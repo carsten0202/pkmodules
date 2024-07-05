@@ -35,7 +35,7 @@ class PGSFile(click.File):
 					pgs = ScoringFile(f"{value}.txt.gz")
 				logger.debug(f"convert: '{pgs.local_path}' exists - Download aborted")
 			except:
-				self.fail(f"ERROR: Unable to open '{value}' as a risk score")
+				self.fail(f"ERROR: Unable to open '{value}' as a PGS risk score")
 		return pgs
 
 
