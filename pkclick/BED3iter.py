@@ -25,7 +25,6 @@ class BED3iter(object):
         iterator: Iterator which returns rows of BED data as lists (or tuples).
         """
         self.iter = iterator
-        logger.debug(f"BED3iter: I'm here!")
 
     def __iter__(self):
         return self

@@ -6,6 +6,7 @@ from click import *
 from .pkclick import *
 
 # Finally inport from loose files:
+from .BED3    import BED3
 from .CSViter import CSViter
 from .CSVlist import CSVlist
-from .BED3    import BED3
+from .VCFFile import VCFFile
