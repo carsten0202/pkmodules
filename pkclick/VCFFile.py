@@ -6,8 +6,6 @@
 import click
 import logging
 
-from .BED3iter import BED3iter
-
 logger = logging.getLogger(__name__)
 
 # NOTE: Here's some fun. All click type extenders must obey these guys:
