@@ -10,4 +10,4 @@ from .BED3    import BED3
 from .CSViter import CSViter
 from .CSVlist import CSVlist
 from .VCFFile import VCFFile
-from .PGSfile import PGSFile
+from .PGSFile import PGSFile
