@@ -3,11 +3,10 @@
 # --%%  pkcsv.py    %%--
 #
 
-__version__ = "1.4"
+__version__ = "1.4.0"
 # 1.2 : Changed reader into a real classed object.
 # 1.3 : Added a try statement to catch errors in DictReader if f isn't correct format.
 # 1.4 : Made _configure and the sniffer part more robust with try, except clause
-
 
 import csv
 import itertools
@@ -28,6 +27,10 @@ class reader(object):
 
     def __next__(self):
         return next(self._reader)
+
+    @property
+    def QUOTE_ALL(self):
+        return True
 
 class DictReader(csv.DictReader):
     """Extend DictReader from csv to add extra functionality."""
@@ -62,8 +65,30 @@ def _configure(f, dialect=None, comment_char=None, delimiter=None):
     reader = csv.reader([line1, line2], dialect)
     header = next(reader)
     second = next(reader)
+    logger.debug(f"Parsing input header: {header}")
+    logger.debug(f"Parsing input first row: {second}")
     if len(header) + 1 == len(second):
         logger.info(f"R table format detected in input.")
         header = ["row.index"] + header
     return f2, dialect
+
+def sniff(f, comment_char=None, delimiters=None):
+    if not f.seekable():
+        logger.warning(f"Format_sniffer: Reading from '{f.name}' which isn't searchable. Reading will be slow.")
+        return None
+    line1, line2 = _get_two_lines(f, comment_char)
+    f.seek(0)
+    dialect = csv.Sniffer().sniff(line1 + line2, delimiters)
+    return dialect
+
+def _get_two_lines(f, comment_char=None):
+    if comment_char:
+        while ((line1 := next(f)).startswith(comment_char)):
+            pass
+        while ((line2 := next(f)).startswith(comment_char)):
+            pass
+    else:
+        line1 = next(f)
+        line2 = next(f)
+    return (line1, line2)
 
