@@ -1,6 +1,6 @@
 ###########################################################
 #
-# ---%%%  Class VCFFile: Handling VCF data in Click  %%%---
+# ---%%%  Class VCFFile: Handling VCF data in Click using pysam  %%%---
 #
 
 import click
@@ -22,10 +22,10 @@ logger = logging.getLogger(__name__)
 class VCFFile(click.File):
 	"""A class for parsing a VCF file using pysam."""
 	name = "VCF_FILE"
+
 	def convert(self, value, param, ctx):
 		"""Convert by reading VCF with pysam VariantFile."""
 		if isinstance(value, str):
-			logger.debug(f"This is my value: {value}")
 			try:
 				from pysam import BGZFile, VariantFile
 				if 'r' in self.mode:
