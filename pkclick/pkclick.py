@@ -3,10 +3,9 @@
 # --%% pkclick.py  %%--
 #
  
-__version__ = "1.5"
+__version__ = "1.5.0"
 # 1.4 : Added CSVList to the family
 # 1.5 : Found and fixed some big bugs like sniffer failing and SampleList not being idempotent
-
 
 import click
 import codecs
