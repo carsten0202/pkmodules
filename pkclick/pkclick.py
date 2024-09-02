@@ -1,12 +1,12 @@
 
 #
-# --%% plclick.py  %%--
+# --%% pkclick.py  %%--
 #
  
-__version__ = "1.6"
+__version__ = "1.6.0"
 # 1.4 : Added CSVList to the family
-# 1.5 : Made CSVlist indempotent. Should now obey the click law below
-# 1.6 : Looks lie I managed to add isal to the list
+# 1.5 : Found and fixed some big bugs like sniffer failing and SampleList not being idempotent
+# 1.6 : Basic cleaning - Moved some functions out of pkclick.py file
 
 import click
 import codecs
@@ -14,7 +14,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# TODO: Here's some fun. All click type extenders must obey these guys:
+# NOTE: Here's some fun. All click type extenders must obey these guys:
 #    it needs a name
 #    it needs to pass through 'None' unchanged
 #    it needs to convert from a string
@@ -61,7 +61,7 @@ class gzFile(click.File):
         logger.debug(f"gzFile: Input is seekable = {f.seekable()}.")
         if f.seekable():
             file_sample = f.read(max(len(x) for x in magic_dict))
-            logger.debug(f"gzFile: Sniffer sample = '{file_sample}'.")
+            logger.debug(f"gzFile: Sniffer sample = '{file_sample.rstrip()}'.")
             f.seek(0)
             for magic, filetype in magic_dict.items():
                 if file_sample.startswith(magic):
@@ -127,26 +127,6 @@ class CSV(click.ParamType):
 
 
 
-#
-# -%  CLASS: pkclick.CSVIter  %-
-
-class CSVIter(click.File):
-    """A class for opening files with data columns and returning them as a list without headline.
-       Output: An obejct which behaves like a csv.reader"""
-    def convert(self, value, param, ctx):
-        """Convert by calling csv.reader on filehandle."""
-        import pklib.pkcsv as csv
-        if value is None or isinstance(value, csv.reader):
-            return value
-        try:
-            f = super().convert(value, param, ctx)
-            logging.debug(f"CSVList: Reading data table from '{f.name}'")
-            return csv.reader(f, comment_char="#")
-        except Exception as e:
-            logging.debug(e)
-            self.fail(f"ERROR: Unable to open '{value}' as a column-based text file.")
-
-
 
 #
 # -%  CLASS: pkclick.CSVfile  %-
@@ -170,49 +150,14 @@ class CSVFile(click.File):
 
 
 #
-# -%  CLASS pkclick.CSVList  %-
-
-class CSVList(CSVIter):
-    """A class for opening files with data columns and returning them as a list without headline.
-       Output: Like CSVIter, but returns a list, not an iterator {e.g. like list(csv.reader())}"""
-    def convert(self, value, param, ctx):
-        """Convert the iterator from parent to a list."""
-        if value is None or isinstance(value, list):
-            return value
-        return list(super().convert(value, param, ctx))
-
-
-
-#
-# -%  CLASS: pkclick.VCFFile  -%
-
-class VCFFile(click.File):
-    """A class for parsing a VCF file using pysam."""
-    name = "VCFFILE"
-
-    def convert(self, value, param, ctx):
-        """Convert by reading VCF with pysam VariantFile."""
-        try: from pysam import VariantFile
-        except ImportError as e:
-            logging.debug(e)
-            self.fail("ERROR: Encountered VCF imput but could not import the PySAM module for reading VCF input.i\nERROR: Please make sure PySAM isinstalled or use alternative input.")
-        if value is None or isinstance(value, VariantFile):
-            return value
-        try:
-            logging.debug(f"VCFFile: Reading variant info from {value}")
-            return VariantFile(value)
-        except Exception as e:
-            logging.debug(e)
-            self.fail(f"ERROR: Unable to open '{value}' as a VCF file.")
-
-
-
-#
 # -%  CLASS: SampleList  %-
 
 class SampleList(gzFile):
     """Obtain a list of samples from a file (or '-'... maybe?)."""
     def convert(self, value, param, ctx):
+        """Expects value to be a file with single-column input (Or a VCF file with samples), and returns a list with each line from file."""
+        if value is None or isinstance(value, list):
+            return value
         f = super().convert(value, param, ctx)
         logger.debug(f"SampleList: Input is seekable = {f.seekable()}.")
         if self._isVCF(f):
@@ -243,8 +188,8 @@ class SampleList(gzFile):
         """Is f a VCF file? Returns 'None' if it couldn't check f."""
         if f.seekable():
             file_sample = f.readline()
-            logger.debug(f"SampleList: Sniffer sample = '{file_sample}'.")
             f.seek(0)
+            logger.debug(f"SampleList: isVCF = {file_sample.startswith('##fileformat=VCFv4')}")
             return file_sample.startswith("##fileformat=VCFv4")
         return None
 
@@ -255,12 +200,14 @@ class SampleList(gzFile):
             import csv
             file_line = f.readline()
             file_sample = f.read(1024)
-            logger.debug(f"SampleList: First line looks like this: '{file_line}'.")
             f.seek(0)
-            try: dialect = csv.Sniffer().sniff(file_sample)
+            try:
+                dialect = csv.Sniffer().sniff(file_sample, delimiters="     ,")
+                out = len(next(csv.reader([file_line], dialect))) > 1
             except csv.Error:
-                return False
-            return len(next(csv.reader([file_line], dialect))) > 1
+                out = False
+            logger.debug(f"SampleList: isTable = {out}")
+            return out
         return None
 
 
